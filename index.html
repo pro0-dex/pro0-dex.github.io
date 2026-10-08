@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pro-0</title>
+    <meta name="description" content="Pro-0: learning dexterous robot policies from human glove demonstrations alone, with zero on-robot training data.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Google+Sans+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <nav class="top-nav" aria-label="Sections">
+      <div class="nav-inner">
+        <a class="nav-brand" href="#top">Pro-0</a>
+        <div class="nav-links">
+          <a href="#abstract">Abstract</a>
+          <a href="#introduction">Introduction</a>
+          <a href="#method">Method</a>
+          <a href="#experiments">Experiments</a>
+          <a href="#results">Results</a>
+          <a href="#policy-videos">Policy Videos</a>
+        </div>
+      </div>
+    </nav>
+
+    <header class="hero" id="top">
+      <div class="hero-inner">
+        <p class="venue-badge">Submitted to Scaling H2R @ CoRL 2026</p>
+        <h1>
+          <span class="title-accent">Pro-0:</span>
+          <span class="title-sub">Towards Dexterous Policies with Zero On-Robot Data via Hardware&ndash;Software Co-Design</span>
+        </h1>
+        <p class="authors"><span class="author">Anonymous Authors</span></p>
+        <p class="affiliation">Under review</p>
+      </div>
+    </header>
+
+    <main class="page">
+      <figure class="teaser">
+        <img class="teaser-img" src="figures/overview.jpg" alt="A human demonstrates a reach while wearing the Proception Glove and tracked by a Meta Quest; the same trajectory is executed by the robot with the ProHand.">
+        <figcaption class="tldr"><strong>TL;DR</strong> Demonstrate with a tactile glove and a wrist camera that sees what the robot sees, retarget the motion to a dexterous hand, and train an RGB-only policy that runs on the robot with zero on-robot data.</figcaption>
+      </figure>
+
+      <section id="abstract">
+        <h2>Abstract</h2>
+        <div class="abstract-card">
+          <p>
+            For two-finger grippers, Universal Manipulation Interface (UMI) offers a practical
+            framework for collecting human demonstrations and training robot policies. By co-designing
+            the collection hardware and policy interface, it balances data-collection throughput with
+            transferability to the robot. Extending this success to dexterous hands remains challenging
+            despite advances in human demonstration collection. We introduce Pro-0, a dexterous
+            manipulation model that we build by co-designing the hardware and learning algorithm. We
+            build the system around Proception&rsquo;s tendon-driven ProHand and wearable Proception
+            Gloves, using matched wrist-camera viewpoints to align human and robot observations. This
+            lean setup lets people demonstrate tasks naturally and provides data for learning RGB-only
+            dexterous policies. Pro-0 transfers these policies directly to the robot without on-robot
+            training data, achieving 80% success across multiple tasks.
+          </p>
+        </div>
+      </section>
+
+      <section id="introduction">
+        <h2>Introduction</h2>
+        <p>
+          Imitation learning trades off data-collection throughput against transfer to the robot.
+          Teleoperation records data on the target robot but is slow and needs robot hardware, while
+          human videos are plentiful but hard to turn into executable robot actions. UMI showed that
+          co-designing the collection device, its observations, and the policy interface lets portable
+          human demonstrations transfer directly to a two-finger gripper. Pro-0 asks how to extend
+          this to dexterous hands.
+        </p>
+        <p>
+          Existing dexterous systems each give something up: exoskeletons such as DexUMI constrain the
+          operator to the robot&rsquo;s kinematics, and glove-based systems such as DexCap, DexWild,
+          and DexViTac rely on point clouds, robot co-training data, or extra sensing to transfer well.
+          Pro-0 instead aligns the human and robot <em>at collection time</em>:
+        </p>
+        <ul>
+          <li>A thin tactile glove fits both the human hand and the ProHand, so demonstrators move naturally.</li>
+          <li>A glove-mounted wrist camera reproduces the robot&rsquo;s wrist view, so no image editing is needed.</li>
+          <li>Tracked hand motion is retargeted to the arm and hand with inverse kinematics, turning each demonstration into robot training data.</li>
+        </ul>
+      </section>
+
+      <section id="method">
+        <h2>Method</h2>
+        <p class="section-lead">
+          A human demonstration recorded from the robot&rsquo;s viewpoint and mapped into its joint
+          space can be treated as a robot demonstration. Pro-0 turns each demonstration into
+          wrist-camera images paired with executable robot actions, the same form as teleoperation
+          data, in three steps.
+        </p>
+
+        <h3>1. Data capture</h3>
+        <p>
+          The capture system is built so that a human demonstration already looks like robot data:
+        </p>
+        <ul>
+          <li><strong>Matched viewpoint.</strong> A wrist camera on the glove sits where the robot&rsquo;s wrist camera sits relative to its palm, so a policy trained on human data needs no image adaptation on the robot.</li>
+          <li><strong>Fixed tracking.</strong> A Meta Quest 3 on a stand, placed at a pose taken from the robot cell&rsquo;s CAD model, tracks the demonstrator&rsquo;s arm, wrist, and fingers in the robot&rsquo;s workspace.</li>
+          <li><strong>Natural hands.</strong> The thin glove is the only thing worn on the hand, so demonstrators keep full dexterity and can feel contact.</li>
+          <li><strong>Shared touch.</strong> The glove&rsquo;s tactile sensors use the same layout on the human hand and on the ProHand.</li>
+        </ul>
+        <div class="table-wrap">
+          <table class="table-compact">
+            <thead>
+              <tr><th>Sensor</th><th>Modality</th><th>Rate</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Quest 3</td><td>Hand keypoints</td><td>60 Hz</td><td>Wrist and 5 &times; 4 finger joint poses</td></tr>
+              <tr><td>Quest 3</td><td>Arm keypoints</td><td>60 Hz</td><td>Shoulder-to-wrist chain</td></tr>
+              <tr><td>Quest 3</td><td>Passthrough RGB</td><td>60 Hz</td><td>Workspace view</td></tr>
+              <tr><td>Glove</td><td>Wrist RGB</td><td>30 Hz</td><td>1600 &times; 1200, global shutter</td></tr>
+              <tr><td>Glove</td><td>Tactile</td><td>~230 Hz</td><td>96 taxels on fingers and palm</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="caption">Modalities recorded per episode, for both hands, timestamped on a common clock.</p>
+
+        <h3>2. Human-to-robot action transfer</h3>
+        <p>
+          Because the headset sits at a known pose in the robot cell, every tracked keypoint can be
+          mapped directly from the headset frame into the robot base frame. Retargeting then solves,
+          offline and for every timestep, the joints of a 7-DoF arm and a 22-DoF ProHand (2 wrist and
+          20 finger joints) that reproduce the human motion.
+        </p>
+        <ul>
+          <li><strong>Arm.</strong> Differential inverse kinematics drives the robot&rsquo;s wrist to the human wrist pose. A posture term keeps the redundant elbow still unless tracking needs it, and each timestep is warm-started from the last for smooth trajectories.</li>
+          <li><strong>Hand.</strong> With the wrists aligned, keypoints at every finger joint and fingertip of the robot hand are matched to their human counterparts. Matching every joint, not just the fingertips, preserves the shape of each finger.</li>
+          <li><strong>Executable by construction.</strong> Joint limits and velocity bounds are enforced in the solver and the hand&rsquo;s mechanical couplings after each step, so the resulting trajectory replays on the robot without further processing.</li>
+        </ul>
+        <figure class="figure figure-narrow">
+          <img src="figures/method-overview.jpg" alt="Five rows of frames showing one demonstration: headset view of the hand, wrist-camera view, tracked keypoints, retargeted robot in simulation, and real robot execution." loading="lazy">
+          <figcaption>
+            <span class="fig-label">Figure 1.</span> One demonstration from capture to execution:
+            (a) headset tracking, (b) wrist-camera view, (c) tracked keypoints, (d) retargeted arm and
+            hand, (e) execution on the real robot.
+          </figcaption>
+        </figure>
+
+        <h3>3. Policy learning</h3>
+        <p>
+          Each retargeted demonstration pairs wrist-camera images with robot joint trajectories, which
+          we use to train a single multi-task diffusion policy.
+        </p>
+        <ul>
+          <li><strong>Image-only input.</strong> The policy sees only the current wrist image, with no image history or proprioception. Because the glove camera matches the robot camera, this input looks the same in training and deployment.</li>
+          <li><strong>Relative actions.</strong> Each action is the end-effector pose plus the 22 wrist and finger joints, expressed relative to the current state, so the policy describes how the hand should move rather than where it is.</li>
+          <li><strong>Architecture.</strong> A frozen DINOv2 encoder turns the image into a grid of patch tokens, kept as a sequence so the policy can attend to where objects and fingers appear. A diffusion transformer cross-attends to these tokens, with the diffusion step injected through adaptive layer norm.</li>
+          <li><strong>Deployment.</strong> The policy denoises an action chunk in 10 DDIM steps; the robot executes the first half through inverse kinematics, then replans from a new image.</li>
+        </ul>
+        <figure class="figure">
+          <img src="figures/architecture.png" alt="Policy architecture in two panels: (a) training on human demonstrations, where a diffusion transformer conditioned on DINOv2 tokens of the glove wrist view learns to denoise retargeted actions; (b) inference on the robot, where it denoises Gaussian noise into an action chunk executed on the robot arm and hand." loading="lazy">
+          <figcaption>
+            <span class="fig-label">Figure 2.</span> Policy architecture. (a) Training: a diffusion transformer
+            learns to denoise retargeted human actions, conditioned on frozen DINOv2 tokens from the glove
+            wrist view. (b) Inference: it iteratively denoises Gaussian noise into an action chunk that the
+            robot executes before observing the next wrist frame.
+          </figcaption>
+        </figure>
+      </section>
+
+      <section id="experiments">
+        <h2>Experiments</h2>
+        <p>
+          We test whether a policy trained only on human demonstrations can perform dexterous
+          manipulation on a real robot, using three short tasks that cover reaching, pressing,
+          grasping, and releasing.
+        </p>
+        <ul>
+          <li><strong>Buzzer:</strong> press a buzzer firmly enough to trigger it.</li>
+          <li><strong>Bucket:</strong> grasp a bucket and lift it off the table.</li>
+          <li><strong>Beanbag:</strong> starting with a beanbag in hand, release it into a bucket.</li>
+        </ul>
+        <p>
+          We collected 250 demonstrations per task (750 total), with object positions varied over a
+          40&nbsp;cm &times; 40&nbsp;cm area. Each task is evaluated over 20 trials: a trial scores 0.5 for
+          reaching the target and 1.0 for completing the interaction.
+        </p>
+      </section>
+
+      <section id="results">
+        <h2>Results</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Metric</th><th>Buzzer</th><th>Bucket</th><th>Beanbag</th><th>Average</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Approach</td><td>20 / 20</td><td>19 / 20</td><td>20 / 20</td><td>98.3%</td></tr>
+              <tr><td>Full success</td><td>18 / 20</td><td>12 / 20</td><td>19 / 20</td><td>81.7%</td></tr>
+              <tr><td>Average score</td><td>0.95</td><td>0.78</td><td>0.98</td><td>0.90</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="caption">Real-robot results of a policy trained only on human demonstrations, 20 trials per task.</p>
+        <p>
+          Almost all failures happen during the interaction rather than the approach, so the policy
+          reliably reaches its target from the wrist view alone. Bucket is the hardest task: fingers
+          wrapped around the handle are partly hidden from the headset, so tracked finger curl is
+          underestimated and the retargeted grasps are less consistent. Better hand tracking during
+          contact, or using the glove&rsquo;s tactile signals as a policy input, are natural next steps.
+        </p>
+      </section>
+
+      <section id="policy-videos">
+        <h2>Policy Videos</h2>
+        <p class="section-lead">Autonomous rollouts on the robot at 1&times; speed, with policies trained only on human demonstrations.</p>
+        <div class="video-grid">
+          <figure>
+            <div class="video-frame">
+              <video src="videos/bucket.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+              <span class="speed-badge">1&times;</span>
+            </div>
+            <figcaption>Bucket</figcaption>
+          </figure>
+          <figure>
+            <div class="video-frame">
+              <video src="videos/buzzer.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+              <span class="speed-badge">1&times;</span>
+            </div>
+            <figcaption>Buzzer</figcaption>
+          </figure>
+          <figure>
+            <div class="video-frame">
+              <video src="videos/beanbag.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+              <span class="speed-badge">1&times;</span>
+            </div>
+            <figcaption>Beanbag</figcaption>
+          </figure>
+          <figure>
+            <div class="video-frame">
+              <video src="videos/touch.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+              <span class="speed-badge">1&times;</span>
+            </div>
+            <figcaption>Touch</figcaption>
+          </figure>
+        </div>
+      </section>
+    </main>
+    <script>
+      document.querySelectorAll('video').forEach((v) => {
+        v.defaultMuted = true;
+        v.muted = true;
+      });
+    </script>
+  </body>
+</html>
