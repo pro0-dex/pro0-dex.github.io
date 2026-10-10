@@ -15,12 +15,12 @@
       <div class="nav-inner">
         <a class="nav-brand" href="#top">Pro-0</a>
         <div class="nav-links">
+          <a href="#policy-videos">Policy Videos</a>
           <a href="#abstract">Abstract</a>
           <a href="#introduction">Introduction</a>
           <a href="#method">Method</a>
           <a href="#experiments">Experiments</a>
           <a href="#results">Results</a>
-          <a href="#policy-videos">Policy Videos</a>
         </div>
       </div>
     </nav>
@@ -42,6 +42,41 @@
         <img class="teaser-img" src="figures/overview.jpg" alt="A human demonstrates a reach while wearing the Proception Glove and tracked by a Meta Quest; the same trajectory is executed by the robot with the ProHand.">
         <figcaption class="tldr"><strong>TL;DR</strong> Demonstrate with a tactile glove and a wrist camera that sees what the robot sees, retarget the motion to a dexterous hand, and train an RGB-only policy that runs on the robot with zero on-robot data.</figcaption>
       </figure>
+
+      <section id="policy-videos">
+        <h2>Policy Videos</h2>
+        <p class="section-lead">Autonomous rollouts on the robot at 1&times; speed, with policies trained only on human demonstrations.</p>
+        <div class="video-grid">
+          <figure>
+            <div class="video-frame">
+              <video src="videos/bucket.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+              <span class="speed-badge">1&times;</span>
+            </div>
+            <figcaption>Bucket</figcaption>
+          </figure>
+          <figure>
+            <div class="video-frame">
+              <video src="videos/buzzer.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+              <span class="speed-badge">1&times;</span>
+            </div>
+            <figcaption>Buzzer</figcaption>
+          </figure>
+          <figure>
+            <div class="video-frame">
+              <video src="videos/beanbag.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+              <span class="speed-badge">1&times;</span>
+            </div>
+            <figcaption>Beanbag</figcaption>
+          </figure>
+          <figure>
+            <div class="video-frame">
+              <video src="videos/touch.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+              <span class="speed-badge">1&times;</span>
+            </div>
+            <figcaption>Touch</figcaption>
+          </figure>
+        </div>
+      </section>
 
       <section id="abstract">
         <h2>Abstract</h2>
@@ -204,41 +239,6 @@
           underestimated and the retargeted grasps are less consistent. Better hand tracking during
           contact, or using the glove&rsquo;s tactile signals as a policy input, are natural next steps.
         </p>
-      </section>
-
-      <section id="policy-videos">
-        <h2>Policy Videos</h2>
-        <p class="section-lead">Autonomous rollouts on the robot at 1&times; speed, with policies trained only on human demonstrations.</p>
-        <div class="video-grid">
-          <figure>
-            <div class="video-frame">
-              <video src="videos/bucket.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
-              <span class="speed-badge">1&times;</span>
-            </div>
-            <figcaption>Bucket</figcaption>
-          </figure>
-          <figure>
-            <div class="video-frame">
-              <video src="videos/buzzer.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
-              <span class="speed-badge">1&times;</span>
-            </div>
-            <figcaption>Buzzer</figcaption>
-          </figure>
-          <figure>
-            <div class="video-frame">
-              <video src="videos/beanbag.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
-              <span class="speed-badge">1&times;</span>
-            </div>
-            <figcaption>Beanbag</figcaption>
-          </figure>
-          <figure>
-            <div class="video-frame">
-              <video src="videos/touch.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
-              <span class="speed-badge">1&times;</span>
-            </div>
-            <figcaption>Touch</figcaption>
-          </figure>
-        </div>
       </section>
     </main>
     <script>
