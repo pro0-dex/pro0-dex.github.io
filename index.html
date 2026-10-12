@@ -19,15 +19,13 @@
           <a href="#abstract">Abstract</a>
           <a href="#introduction">Introduction</a>
           <a href="#method">Method</a>
-          <a href="#experiments">Experiments</a>
-          <a href="#results">Results</a>
+          <a href="#experiments">Experiments &amp; Results</a>
         </div>
       </div>
     </nav>
 
     <header class="hero" id="top">
       <div class="hero-inner">
-        <p class="venue-badge">Submitted to Scaling H2R @ CoRL 2026</p>
         <h1>
           <span class="title-accent">Pro-0:</span>
           <span class="title-sub">Towards Dexterous Policies with Zero On-Robot Data via Hardware&ndash;Software Co-Design</span>
@@ -39,8 +37,8 @@
 
     <main class="page">
       <figure class="teaser">
-        <img class="teaser-img" src="figures/overview.jpg" alt="A human demonstrates a reach while wearing the Proception Glove and tracked by a Meta Quest; the same trajectory is executed by the robot with the ProHand.">
-        <figcaption class="tldr"><strong>TL;DR</strong> Demonstrate with a tactile glove and a wrist camera that sees what the robot sees, retarget the motion to a dexterous hand, and train an RGB-only policy that runs on the robot with zero on-robot data.</figcaption>
+        <img class="teaser-img" src="figures/overview.jpg" alt="Overview of Pro-0: a demonstrator wearing a tactile Proception Glove with a wrist camera is tracked by a static Meta Quest 3; tracked keypoints are refined with tactile signals, retargeted with inverse kinematics, and executed on the ProHand.">
+        <figcaption class="tldr"><strong>TL;DR</strong> Demonstrate with a tactile glove and a wrist camera that sees what the robot sees, refine the tracked hand with touch, retarget it to a dexterous hand, and train an RGB-only policy that runs on the robot with zero on-robot data.</figcaption>
       </figure>
 
       <section id="policy-videos">
@@ -92,7 +90,7 @@
             Gloves, using matched wrist-camera viewpoints to align human and robot observations. This
             lean setup lets people demonstrate tasks naturally and provides data for learning RGB-only
             dexterous policies. Pro-0 transfers these policies directly to the robot without on-robot
-            training data, achieving 80% success across multiple tasks.
+            training data, achieving &gt;80% success across multiple tasks.
           </p>
         </div>
       </section>
@@ -105,7 +103,7 @@
           human videos are plentiful but hard to turn into executable robot actions. UMI showed that
           co-designing the collection device, its observations, and the policy interface lets portable
           human demonstrations transfer directly to a two-finger gripper. Pro-0 asks how to extend
-          this to dexterous hands.
+          this to dexterous hands, reaching &gt;80% success on a real robot from human demonstrations alone.
         </p>
         <p>
           Existing dexterous systems each give something up: exoskeletons such as DexUMI constrain the
@@ -116,6 +114,7 @@
         <ul>
           <li>A thin tactile glove fits both the human hand and the ProHand, so demonstrators move naturally.</li>
           <li>A glove-mounted wrist camera reproduces the robot&rsquo;s wrist view, so no image editing is needed.</li>
+          <li>The glove&rsquo;s tactile signals correct the tracked hand during grasps, where vision alone underestimates finger curl.</li>
           <li>Tracked hand motion is retargeted to the arm and hand with inverse kinematics, turning each demonstration into robot training data.</li>
         </ul>
       </section>
@@ -126,7 +125,7 @@
           A human demonstration recorded from the robot&rsquo;s viewpoint and mapped into its joint
           space can be treated as a robot demonstration. Pro-0 turns each demonstration into
           wrist-camera images paired with executable robot actions, the same form as teleoperation
-          data, in three steps.
+          data, in four steps.
         </p>
 
         <h3>1. Data capture</h3>
@@ -154,11 +153,36 @@
           </table>
         </div>
         <p class="caption">Modalities recorded per episode, for both hands, timestamped on a common clock.</p>
+        <p>
+          Besides hand tracking, the Quest&rsquo;s body tracking fits a skeleton to the demonstrator,
+          giving arm, torso, and head poses as well. The glove&rsquo;s tactile unit and wrist camera
+          connect to the headset over USB, so every stream is captured in sync, and each episode is
+          saved as a single time-indexed log.
+        </p>
 
-        <h3>2. Human-to-robot action transfer</h3>
+        <h3>2. Tactile-based hand pose refinement</h3>
+        <p>
+          Visual hand tracking is least reliable exactly when it matters most: during a grasp, the
+          object hides most of the fingers, the tracker falls back on temporal history, and it
+          underestimates how far the fingers are curled. Retargeted directly, the robot hand would stop
+          short of the object. The glove&rsquo;s tactile sensors detect contact regardless of
+          occlusion, so we use them to find contact intervals and shift the finger keypoints inward
+          during contact. The refined motion closes around the object and gives the robot a stable grasp.
+        </p>
+        <figure class="figure">
+          <img src="figures/grasp-offset.jpg" alt="Tactile-based refinement: a human grasp with the glove; tracked raw keypoints in magenta leave the robot fingers open, while tactile-refined keypoints in red are offset inward so the robot hand closes around the object." loading="lazy">
+          <figcaption>
+            <span class="fig-label">Figure 1.</span> Tactile-based hand pose refinement. During
+            contact, the raw tracked keypoints (magenta) are moved inward to refined keypoints (red),
+            turning an open, slipping hand into a stable grasp.
+          </figcaption>
+        </figure>
+
+        <h3>3. Human-to-robot action transfer</h3>
         <p>
           Because the headset sits at a known pose in the robot cell, every tracked keypoint can be
-          mapped directly from the headset frame into the robot base frame. Retargeting then solves,
+          mapped directly from the headset frame into the robot base frame with a single rigid
+          transform taken from the CAD model, with no per-session calibration. Retargeting then solves,
           offline and for every timestep, the joints of a 7-DoF arm and a 22-DoF ProHand (2 wrist and
           20 finger joints) that reproduce the human motion.
         </p>
@@ -170,13 +194,13 @@
         <figure class="figure figure-narrow">
           <img src="figures/method-overview.jpg" alt="Five rows of frames showing one demonstration: headset view of the hand, wrist-camera view, tracked keypoints, retargeted robot in simulation, and real robot execution." loading="lazy">
           <figcaption>
-            <span class="fig-label">Figure 1.</span> One demonstration from capture to execution:
+            <span class="fig-label">Figure 2.</span> One demonstration from capture to execution:
             (a) headset tracking, (b) wrist-camera view, (c) tracked keypoints, (d) retargeted arm and
             hand, (e) execution on the real robot.
           </figcaption>
         </figure>
 
-        <h3>3. Policy learning</h3>
+        <h3>4. Policy learning</h3>
         <p>
           Each retargeted demonstration pairs wrist-camera images with robot joint trajectories, which
           we use to train a single multi-task diffusion policy.
@@ -190,7 +214,7 @@
         <figure class="figure">
           <img src="figures/architecture.png" alt="Policy architecture in two panels: (a) training on human demonstrations, where a diffusion transformer conditioned on DINOv2 tokens of the glove wrist view learns to denoise retargeted actions; (b) inference on the robot, where it denoises Gaussian noise into an action chunk executed on the robot arm and hand." loading="lazy">
           <figcaption>
-            <span class="fig-label">Figure 2.</span> Policy architecture. (a) Training: a diffusion transformer
+            <span class="fig-label">Figure 3.</span> Policy architecture. (a) Training: a diffusion transformer
             learns to denoise retargeted human actions, conditioned on frozen DINOv2 tokens from the glove
             wrist view. (b) Inference: it iteratively denoises Gaussian noise into an action chunk that the
             robot executes before observing the next wrist frame.
@@ -199,7 +223,7 @@
       </section>
 
       <section id="experiments">
-        <h2>Experiments</h2>
+        <h2>Experiments &amp; Results</h2>
         <p>
           We test whether a policy trained only on human demonstrations can perform dexterous
           manipulation on a real robot, using three short tasks that cover reaching, pressing,
@@ -211,14 +235,10 @@
           <li><strong>Beanbag:</strong> starting with a beanbag in hand, release it into a bucket.</li>
         </ul>
         <p>
-          We collected 250 demonstrations per task (750 total), with object positions varied over a
-          40&nbsp;cm &times; 40&nbsp;cm area. Each task is evaluated over 20 trials: a trial scores 0.5 for
-          reaching the target and 1.0 for completing the interaction.
+          We collected 250 demonstrations per task (750 total) and ran 20 evaluation trials per task,
+          with object positions varied over the same 40&nbsp;cm &times; 40&nbsp;cm area. A trial scores
+          0.5 for reaching the object or target and 1.0 for also completing the interaction.
         </p>
-      </section>
-
-      <section id="results">
-        <h2>Results</h2>
         <div class="table-wrap">
           <table>
             <thead>
@@ -231,15 +251,23 @@
             </tbody>
           </table>
         </div>
-        <p class="caption">Real-robot results of a policy trained only on human demonstrations, 20 trials per task.</p>
+        <p class="caption">Real-robot results, 20 trials per task, with a policy trained only on human demonstrations.</p>
+
+        <h3>Analysis</h3>
         <p>
-          Almost all failures happen during the interaction rather than the approach, so the policy
-          reliably reaches its target from the wrist view alone. Bucket is the hardest task: fingers
-          wrapped around the handle are partly hidden from the headset, so tracked finger curl is
-          underestimated and the retargeted grasps are less consistent. Better hand tracking during
-          contact, or using the glove&rsquo;s tactile signals as a policy input, are natural next steps.
+          Pro-0 reaches an average full success rate of 81.7% and completes the approach in 98.3% of
+          trials, so the policy reliably finds its target from the wrist view alone and nearly every
+          failure happens during the interaction. Those failures are small and physical rather than
+          navigational: in Buzzer, both misses made contact but the fingertip slid off the button; in
+          Beanbag, the one miss released a moment early. Bucket is the hardest task, succeeding in 12
+          of the 19 trials that reached it. Its difficulty traces back to the data: fingers wrapped
+          around the handle are partly hidden from the headset, so tracked finger curl is
+          underestimated and the retargeted grasps vary more than the approach motion. This is the
+          gap tactile refinement targets, and using the glove&rsquo;s tactile signals as a policy
+          input is a natural next step.
         </p>
       </section>
+
     </main>
     <script>
       document.querySelectorAll('video').forEach((v) => {
