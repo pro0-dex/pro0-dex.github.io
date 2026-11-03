@@ -131,11 +131,28 @@ a:hover {
 }
 
 .venue-badge {
-  margin: 0 0 20px;
-  color: var(--muted);
-  font: 600 13px/1.2 var(--heading);
-  letter-spacing: 0.12em;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  margin: 0 0 24px;
+  padding: 9px 22px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--accent-tint);
+  color: var(--text);
+  font: 600 13px/1.3 var(--heading);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  box-shadow: var(--shadow-sm);
+}
+
+.venue-badge .venue-sep {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--faint);
+  flex: none;
 }
 
 h1 {
