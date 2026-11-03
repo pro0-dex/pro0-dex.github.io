@@ -154,8 +154,16 @@ a:hover {
   flex: none;
 }
 
-.venue-badge span:last-child {
+.venue-badge .venue-link {
   color: #be185d;
+  text-decoration: underline;
+  text-decoration-color: rgba(190, 24, 93, 0.35);
+  text-underline-offset: 3px;
+}
+
+.venue-badge .venue-link:hover {
+  color: #9d174d;
+  text-decoration-color: currentColor;
 }
 
 h1 {
