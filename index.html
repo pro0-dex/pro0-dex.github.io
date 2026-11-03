@@ -80,17 +80,17 @@
         <h2>Abstract</h2>
         <div class="abstract-card">
           <p>
-            The Universal Manipulation Interface (UMI) showed that co-designing a handheld collection
-            device, its camera viewpoint, and the policy interface lets human demonstrations train
-            two-finger gripper policies without robot data. Extending this to dexterous hands is harder:
-            exoskeletons match the robot&rsquo;s kinematics but constrain the operator, while bare-hand
-            and glove systems leave gaps in both observation and action. We present Pro-0, a dexterous
-            manipulation model built around a thin tactile glove worn by both the human demonstrator and
-            a 22-joint tendon-driven robot hand. A glove-mounted wrist camera reproduces the
-            robot&rsquo;s wrist view, a fixed VR headset tracks the wrist and fingers, and the
-            glove&rsquo;s tactile signals correct finger poses that hand tracking underestimates during
-            contact. The retargeted demonstrations train a diffusion policy that uses only the wrist RGB
-            image. With no robot training data, the policy achieves &gt;80% success across multiple tasks.
+            For two-finger grippers, Universal Manipulation Interface (UMI) offers a practical
+            framework for collecting human demonstrations and training robot policies. By co-designing
+            the collection hardware and policy interface, it balances data-collection throughput with
+            transferability to the robot. Extending this success to dexterous hands remains challenging
+            despite advances in human demonstration collection. We introduce Pro-0, a dexterous
+            manipulation model that we build by co-designing the hardware and learning algorithm. We
+            build the system around Proception&rsquo;s tendon-driven ProHand and wearable Proception
+            Gloves, using matched wrist-camera viewpoints to align human and robot observations. This
+            lean setup lets people demonstrate tasks naturally and provides data for learning RGB-only
+            dexterous policies. Pro-0 transfers these policies directly to the robot without on-robot
+            training data, achieving &gt;80% success across multiple tasks.
           </p>
         </div>
       </section>
