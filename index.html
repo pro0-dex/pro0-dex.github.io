@@ -80,17 +80,17 @@
         <h2>Abstract</h2>
         <div class="abstract-card">
           <p>
-            For two-finger grippers, Universal Manipulation Interface (UMI) offers a practical
-            framework for collecting human demonstrations and training robot policies. By co-designing
-            the collection hardware and policy interface, it balances data-collection throughput with
-            transferability to the robot. Extending this success to dexterous hands remains challenging
-            despite advances in human demonstration collection. We introduce Pro-0, a dexterous
-            manipulation model that we build by co-designing the hardware and learning algorithm. We
-            build the system around Proception&rsquo;s tendon-driven ProHand and wearable Proception
-            Gloves, using matched wrist-camera viewpoints to align human and robot observations. This
-            lean setup lets people demonstrate tasks naturally and provides data for learning RGB-only
-            dexterous policies. Pro-0 transfers these policies directly to the robot without on-robot
-            training data, achieving &gt;80% success across multiple tasks.
+            The Universal Manipulation Interface (UMI) showed that co-designing a handheld collection
+            device, its camera viewpoint, and the policy interface lets human demonstrations train
+            two-finger gripper policies without robot data. Extending this to dexterous hands is harder:
+            exoskeletons match the robot&rsquo;s kinematics but constrain the operator, while bare-hand
+            and glove systems leave gaps in both observation and action. We present Pro-0, a dexterous
+            manipulation model built around a thin tactile glove worn by both the human demonstrator and
+            a 22-joint tendon-driven robot hand. A glove-mounted wrist camera reproduces the
+            robot&rsquo;s wrist view, a fixed VR headset tracks the wrist and fingers, and the
+            glove&rsquo;s tactile signals correct finger poses that hand tracking underestimates during
+            contact. The retargeted demonstrations train a diffusion policy that uses only the wrist RGB
+            image. With no robot training data, the policy achieves &gt;80% success across multiple tasks.
           </p>
         </div>
       </section>
@@ -102,13 +102,18 @@
           Teleoperation records data on the target robot but is slow and needs robot hardware, while
           human videos are plentiful but hard to turn into executable robot actions. UMI showed that
           co-designing the collection device, its observations, and the policy interface lets portable
-          human demonstrations transfer directly to a two-finger gripper. Pro-0 asks how to extend
-          this to dexterous hands, reaching &gt;80% success on a real robot from human demonstrations alone.
+          human demonstrations transfer directly to a two-finger gripper. Generalist shows the scale
+          that wearable human-data collection can reach, and HiFi-UMI shows that sufficiently accurate
+          demonstrations can support direct deployment without robot data. Pro-0 asks how to extend
+          this co-design principle to dexterous hands, reaching &gt;80% success on a real robot from
+          human demonstrations alone.
         </p>
         <p>
-          Existing dexterous systems each give something up: exoskeletons such as DexUMI constrain the
-          operator to the robot&rsquo;s kinematics, and glove-based systems such as DexCap, DexWild,
-          and DexViTac rely on point clouds, robot co-training data, or extra sensing to transfer well.
+          Existing dexterous systems each give something up. Exoskeletons such as DexUMI match the
+          robot hand&rsquo;s kinematics but constrain natural movement. Motion-capture gloves leave the
+          hand free, but embodiment and observation gaps hinder direct transfer: DexCap relies on point
+          clouds augmented with robot-hand geometry, DexWild reports poor human-only performance, and
+          DexViTac reaches only 17.5% success with vision alone, versus 85.8% with multimodal input.
           Pro-0 instead aligns the human and robot <em>at collection time</em>:
         </p>
         <ul>
@@ -136,7 +141,7 @@
           <li><strong>Matched viewpoint.</strong> A wrist camera on the glove sits where the robot&rsquo;s wrist camera sits relative to its palm, so a policy trained on human data needs no image adaptation on the robot.</li>
           <li><strong>Fixed tracking.</strong> A Meta Quest 3 on a stand, placed at a pose taken from the robot cell&rsquo;s CAD model, tracks the demonstrator&rsquo;s arm, wrist, and fingers in the robot&rsquo;s workspace.</li>
           <li><strong>Natural hands.</strong> The thin glove is the only thing worn on the hand, so demonstrators keep full dexterity and can feel contact.</li>
-          <li><strong>Shared touch.</strong> The glove&rsquo;s tactile sensors use the same layout on the human hand and on the ProHand.</li>
+          <li><strong>Shared touch.</strong> The glove&rsquo;s tactile sensors use the same layout on the human hand and on the ProHand, so tactile observations can transfer to the robot in future work.</li>
         </ul>
         <div class="table-wrap">
           <table class="table-compact">
@@ -148,7 +153,7 @@
               <tr><td>Quest 3</td><td>Arm keypoints</td><td>60 Hz</td><td>Shoulder-to-wrist chain</td></tr>
               <tr><td>Quest 3</td><td>Passthrough RGB</td><td>60 Hz</td><td>Workspace view</td></tr>
               <tr><td>Glove</td><td>Wrist RGB</td><td>30 Hz</td><td>1600 &times; 1200, global shutter</td></tr>
-              <tr><td>Glove</td><td>Tactile</td><td>~230 Hz</td><td>96 taxels on fingers and palm</td></tr>
+              <tr><td>Glove</td><td>Tactile</td><td>~230 Hz (max 500 Hz)</td><td>96 taxels on fingers and palm</td></tr>
             </tbody>
           </table>
         </div>
@@ -166,8 +171,12 @@
           object hides most of the fingers, the tracker falls back on temporal history, and it
           underestimates how far the fingers are curled. Retargeted directly, the robot hand would stop
           short of the object. The glove&rsquo;s tactile sensors detect contact regardless of
-          occlusion, so we use them to find contact intervals and shift the finger keypoints inward
-          during contact. The refined motion closes around the object and gives the robot a stable grasp.
+          occlusion, so we use them to tell which fingers are touching the object, and we register a
+          grasp whenever the thumb and at least one other finger are in contact. During each grasp,
+          the finger keypoints are offset inward: each contacting finger moves toward the thumb, and
+          the thumb moves toward the average position of the contacting fingertips, closing each finger
+          by up to 25&deg;. The refined motion closes around the object and gives the robot a stable
+          grasp.
         </p>
         <figure class="figure">
           <img src="figures/grasp-offset.jpg" alt="Tactile-based refinement: a human grasp with the glove; tracked raw keypoints in magenta leave the robot fingers open, while tactile-refined keypoints in red are offset inward so the robot hand closes around the object." loading="lazy">
@@ -187,8 +196,8 @@
           20 finger joints) that reproduce the human motion.
         </p>
         <ul>
-          <li><strong>Arm.</strong> Differential inverse kinematics drives the robot&rsquo;s wrist to the human wrist pose. A posture term keeps the redundant elbow still unless tracking needs it, and each timestep is warm-started from the last for smooth trajectories.</li>
-          <li><strong>Hand.</strong> With the wrists aligned, keypoints at every finger joint and fingertip of the robot hand are matched to their human counterparts. Matching every joint, not just the fingertips, preserves the shape of each finger.</li>
+          <li><strong>Arm.</strong> Differential inverse kinematics drives the base of the robot wrist to the human wrist pose, taken from the last joint of the tracked arm chain. A posture term anchored to the current configuration keeps the redundant elbow still unless tracking needs it, and each timestep is warm-started from the previous solution for smooth trajectories.</li>
+          <li><strong>Hand.</strong> With the wrists aligned, keypoints at every finger joint and fingertip of the robot hand are matched to their human counterparts, using the same solver with the posture term anchored to the initial hand configuration. Matching every joint, not just the fingertips, preserves the shape of each finger.</li>
           <li><strong>Executable by construction.</strong> Joint limits and velocity bounds are enforced in the solver and the hand&rsquo;s mechanical couplings after each step, so the resulting trajectory replays on the robot without further processing.</li>
         </ul>
         <figure class="figure figure-narrow">
@@ -235,7 +244,7 @@
           <li><strong>Beanbag:</strong> starting with a beanbag in hand, release it into a bucket.</li>
         </ul>
         <p>
-          We collected 250 demonstrations per task (750 total) and ran 20 evaluation trials per task,
+          We recorded 250 demonstrations per task (750 total) and ran 20 evaluation trials per task,
           with object positions varied over the same 40&nbsp;cm &times; 40&nbsp;cm area. A trial scores
           0.5 for reaching the object or target and 1.0 for also completing the interaction.
         </p>
@@ -251,21 +260,28 @@
             </tbody>
           </table>
         </div>
-        <p class="caption">Real-robot results, 20 trials per task, with a policy trained only on human demonstrations.</p>
+        <p class="caption">Real-robot results: 20 trials per task, with a policy trained only on human demonstrations.</p>
 
         <h3>Analysis</h3>
         <p>
           Pro-0 reaches an average full success rate of 81.7% and completes the approach in 98.3% of
           trials, so the policy reliably finds its target from the wrist view alone and nearly every
           failure happens during the interaction. Those failures are small and physical rather than
-          navigational: in Buzzer, both misses made contact but the fingertip slid off the button; in
-          Beanbag, the one miss released a moment early. Bucket is the hardest task, succeeding in 12
-          of the 19 trials that reached it. Its difficulty traces back to the data: fingers wrapped
-          around the handle are partly hidden from the headset, so tracked finger curl is
-          underestimated and the retargeted grasps vary more than the approach motion. This is the
-          gap tactile refinement targets, and using the glove&rsquo;s tactile signals as a policy
-          input is a natural next step.
+          navigational: in Buzzer, both misses made contact but the fingertip slid off the button
+          without triggering it; in Beanbag, the one miss was a premature release that dropped the
+          beanbag outside the bucket. Bucket is the hardest task: its only approach failure came from
+          an incorrect wrist roll, and the grasp succeeded in 12 of the 19 trials that reached the
+          bucket. We attribute this mainly to the data: fingers wrapped around the handle are partly
+          hidden from the headset, so tracked finger curl tends to be underestimated and the
+          retargeted grasps are less consistent across demonstrations than the approach motion.
         </p>
+
+        <h3>Limitations</h3>
+        <ul>
+          <li><strong>Fixed tracking.</strong> Hand poses still come from a Quest headset on a fixed stand. This works in our current setting, but collecting demonstrations in the wild will require mobile tracking.</li>
+          <li><strong>Task scope.</strong> We evaluated only three short tasks. Scaling up both data collection and the range of tasks is needed to assess how well the approach scales.</li>
+          <li><strong>Unused touch.</strong> The gloves record tactile signals, but the policies in this study do not use them. Tactile sensing as an additional policy input is a natural next step.</li>
+        </ul>
       </section>
 
     </main>
